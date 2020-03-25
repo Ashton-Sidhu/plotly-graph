@@ -12,7 +12,7 @@ with open("README.md", "r") as fh:
     long_description = fh.read()
 
 setup(
-    name="pgraph",
+    name="igviz",
     url="https://github.com/Ashton-Sidhu/plotly-graph",
     packages=find_packages(),
     author="Ashton Sidhu",

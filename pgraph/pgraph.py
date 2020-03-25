@@ -1,5 +1,6 @@
 import plotly.graph_objects as go
 import networkx as nx
+from typing import Union
 
 
 def plot_graph(
@@ -24,7 +25,7 @@ def plot_graph(
     title : str, optional
         Title of the graph, by default "Graph"
 
-    sizing_method : {'degree', 'static'} or a node property, optional
+    sizing_method : {'degree', 'static'}, node property or a list, optional
         How to size the nodes., by default "degree"
 
             degree: The larger the degree, the larger the node.
@@ -33,7 +34,9 @@ def plot_graph(
 
             node property: A property field of the node.
 
-    color_method : {'degree'}, hex color code, node property, optional
+            list: A list pertaining to the size of the nodes.
+
+    color_method : {'degree'}, hex color code, node property, or list optional
         How to color the node., by default "degree"
 
             degree: Color the nodes based on their degree.
@@ -41,6 +44,8 @@ def plot_graph(
             hex color code: Hex color code.
 
             node property: A property field of the node.
+
+            list: A list pertaining to the colour of the nodes.
 
     node_text : list, optional
         A list of node properties to display when hovering over the node.
@@ -83,7 +88,16 @@ def plot_graph(
     return fig
 
 
-def _generate_scatter_trace(G, sizing_method, color_method, colorbar_title, node_text):
+def _generate_scatter_trace(
+    G,
+    sizing_method: Union[str, list],
+    color_method: Union[str, list],
+    colorbar_title: str,
+    node_text: list,
+):
+    """
+    Helper function to generate Scatter plot traces for the graph.
+    """
 
     edge_x = []
     edge_y = []
@@ -124,22 +138,28 @@ def _generate_scatter_trace(G, sizing_method, color_method, colorbar_title, node
 
         node_text_list.append(text.strip())
 
-        if sizing_method == "degree":
-            node_size.append(G.degree(node) * 2)
-        elif sizing_method == "static":
-            node_size.append(12)
+        if isinstance(sizing_method, list):
+            node_size = sizing_method
         else:
-            node_size.append(G.nodes[node][sizing_method])
-
-        if color_method == "degree":
-            color.append(G.degree(node))
-        else:
-            # Look for the property, otherwise look for a color code
-            # If none exist, throw an error
-            if color_method in G.nodes[node]:
-                color.append(G.nodes[node][color_method])
+            if sizing_method == "degree":
+                node_size.append(G.degree(node) * 2)
+            elif sizing_method == "static":
+                node_size.append(12)
             else:
-                color.append(color_method)
+                node_size.append(G.nodes[node][sizing_method])
+
+        if isinstance(color_method, list):
+            color = color_method
+        else:
+            if color_method == "degree":
+                color.append(G.degree(node))
+            else:
+                # Look for the property, otherwise look for a color code
+                # If none exist, throw an error
+                if color_method in G.nodes[node]:
+                    color.append(G.nodes[node][color_method])
+                else:
+                    color.append(color_method)
 
     node_trace = go.Scatter(
         x=node_x,
@@ -167,6 +187,9 @@ def _generate_scatter_trace(G, sizing_method, color_method, colorbar_title, node
 def _generate_figure(
     node_trace, edge_trace, title, titlefont_size, showlegend, annotation_text
 ):
+    """
+    Helper function to generate the figure for the Graph.
+    """
 
     fig = go.Figure(
         data=[edge_trace, node_trace],

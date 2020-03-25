@@ -65,6 +65,7 @@ def plot_graph(
         color_method=color_method,
         colorbar_title=colorbar_title,
     )
+
     fig = _generate_figure(
         node_trace,
         edge_trace,
@@ -122,9 +123,9 @@ def _generate_scatter_trace(G, sizing_method, color_method, colorbar_title):
             # Look for the property, otherwise look for a color code
             # If none exist, throw an error
             if color_method in G.nodes[node]:
-                color.append(G.nodes[node][sizing_method])
+                color.append(G.nodes[node][color_method])
             else:
-                color.append(sizing_method)
+                color.append(color_method)
 
     node_trace = go.Scatter(
         x=node_x,

@@ -7,6 +7,7 @@ def plot_graph(
     title="Graph",
     sizing_method="degree",
     color_method="degree",
+    node_text=[],
     titlefont_size=16,
     showlegend=False,
     annotation_text="",
@@ -41,6 +42,9 @@ def plot_graph(
 
             node property: A property field of the node.
 
+    node_text : list, optional
+        A list of node properties to display when hovering over the node.
+
     titlefont_size : int, optional
         Font size of the title, by default 16
 
@@ -64,6 +68,7 @@ def plot_graph(
         sizing_method=sizing_method,
         color_method=color_method,
         colorbar_title=colorbar_title,
+        node_text=node_text,
     )
 
     fig = _generate_figure(
@@ -78,7 +83,7 @@ def plot_graph(
     return fig
 
 
-def _generate_scatter_trace(G, sizing_method, color_method, colorbar_title):
+def _generate_scatter_trace(G, sizing_method, color_method, colorbar_title, node_text):
 
     edge_x = []
     edge_y = []
@@ -86,6 +91,7 @@ def _generate_scatter_trace(G, sizing_method, color_method, colorbar_title):
     node_y = []
     node_size = []
     color = []
+    node_text_list = []
 
     for edge in G.edges():
         x0, y0 = G.nodes[edge[0]]["pos"]
@@ -106,9 +112,17 @@ def _generate_scatter_trace(G, sizing_method, color_method, colorbar_title):
     )
 
     for node in G.nodes():
+        text = f"Degree: {G.degree(node)}\n\n"
+
         x, y = G.nodes[node]["pos"]
         node_x.append(x)
         node_y.append(y)
+
+        if node_text:
+            for prop in node_text:
+                text += f"{prop}: {G.nodes[node][prop]}\n"
+
+        node_text_list.append(text.strip())
 
         if sizing_method == "degree":
             node_size.append(G.degree(node) * 2)
@@ -136,7 +150,6 @@ def _generate_scatter_trace(G, sizing_method, color_method, colorbar_title):
             showscale=True,
             colorscale="YlGnBu",
             reversescale=True,
-            color=color,
             size=node_size,
             colorbar=dict(
                 thickness=15, title=colorbar_title, xanchor="left", titleside="right"
@@ -144,6 +157,9 @@ def _generate_scatter_trace(G, sizing_method, color_method, colorbar_title):
             line_width=2,
         ),
     )
+
+    node_trace.marker.color = color
+    node_trace.text = node_text_list
 
     return node_trace, edge_trace
 

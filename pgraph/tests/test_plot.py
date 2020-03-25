@@ -5,7 +5,7 @@ import pgraph as pg
 
 @pytest.fixture(scope="function")
 def G():
-    G = nx.random_geometric_graph(100, 0.125)
+    G = nx.random_geometric_graph(50, 0.125)
     nx.set_node_attributes(G, 3, "prop")
 
     return G
@@ -28,5 +28,12 @@ def test_plot_graph_fixed_size_color(G):
 def test_plot_graph_property(G):
 
     pg.plot_graph(G, sizing_method="prop", color_method="prop")
+
+    assert True
+
+
+def test_plot_graph_text(G):
+
+    pg.plot_graph(G, node_text=["prop"])
 
     assert True

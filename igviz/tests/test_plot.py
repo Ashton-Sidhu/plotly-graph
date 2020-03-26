@@ -61,3 +61,15 @@ def test_plot_color_list(G):
     ig.plot(G, color_method=color)
 
     assert True
+
+
+def test_plot_layout(G):
+
+    color = []
+
+    for node in G.nodes():
+        color.append(3)
+
+    ig.plot(G, layout="kamada")
+
+    assert True

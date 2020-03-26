@@ -88,6 +88,36 @@ ig.plot(
 
 ![](docs/images/config3.png)
 
+#### Applying layouts
+
+All layouts are calculated through the `pos` property on each node. Networkx has built in layouts you can use and can invoke through igviz.
+
+```python
+ig.plot(
+    G,
+    title="My Graph",
+    layout="kamada",
+)
+```
+
+![](docs/images/config4.png)
+
+To add your own `pos` property you can set it via the `nx.set_node_attributes` function.
+
+```python
+pos_dict = {
+    0: [1, 2], # X, Y coordinates for Node 0
+    1: [1.5, 3], # X, Y coordinates for Node 1
+    ...
+}
+
+nx.set_node_attributes(G, pos_dict, "pos")
+
+ig.plot(
+    G
+)
+```
+
 ## Installation
 
 `pip install igviz`

@@ -1,5 +1,5 @@
 # Interactive Graph Visualization
-![Tests](https://github.com/Ashton-Sidhu/plotly-graph/workflows/Tests/badge.svg)
+![Tests](https://github.com/Ashton-Sidhu/plotly-graph/workflows/Tests/badge.svg) ![](https://img.shields.io/pypi/pyversions/igviz) ![](https://img.shields.io/pypi/v/igviz?color=green) [![Documentation Status](https://readthedocs.org/projects/igviz/badge/?version=latest)](https://igviz.readthedocs.io/en/latest/?badge=latest)
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->

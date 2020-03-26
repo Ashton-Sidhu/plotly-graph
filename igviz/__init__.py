@@ -1,1 +1,1 @@
-from .igviz import plot_graph
+from .igviz import plot

@@ -3,7 +3,7 @@ import networkx as nx
 from typing import Union
 
 
-def plot_graph(
+def plot(
     G,
     title="Graph",
     sizing_method="degree",
@@ -126,15 +126,16 @@ def _generate_scatter_trace(
     )
 
     for node in G.nodes():
-        text = f"Degree: {G.degree(node)}\n\n"
+        text = f"Degree: {G.degree(node)}"
 
         x, y = G.nodes[node]["pos"]
         node_x.append(x)
         node_y.append(y)
 
         if node_text:
+
             for prop in node_text:
-                text += f"{prop}: {G.nodes[node][prop]}\n"
+                text += f"<br></br>{prop}: {G.nodes[node][prop]}"
 
         node_text_list.append(text.strip())
 

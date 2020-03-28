@@ -7,12 +7,14 @@ def plot(
     G,
     title="Graph",
     layout=None,
-    sizing_method="degree",
+    size_method="degree",
     color_method="degree",
     node_text=[],
+    show_edgetext=False,
     titlefont_size=16,
     showlegend=False,
     annotation_text="",
+    colorscale="YlGnBu",
     colorbar_title="",
 ):
     """
@@ -44,7 +46,7 @@ def plot(
             
             spiral: Position nodes in a spiral layout.
             
-    sizing_method : {'degree', 'static'}, node property or a list, optional
+    size_method : {'degree', 'static'}, node property or a list, optional
         How to size the nodes., by default "degree"
 
             degree: The larger the degree, the larger the node.
@@ -69,6 +71,9 @@ def plot(
     node_text : list, optional
         A list of node properties to display when hovering over the node.
 
+    show_edgetext : bool, optional
+        True to display the edge properties on hover.
+
     titlefont_size : int, optional
         Font size of the title, by default 16
 
@@ -77,6 +82,9 @@ def plot(
 
     annotation_text : str, optional
         Graph annotation text, by default ""
+
+    colorscale : {'Greys', 'YlGnBu', 'Greens', 'YlOrRd', 'Bluered', 'RdBu', 'Reds', 'Blues', 'Picnic', 'Rainbow', 'Portland', 'Jet', 'Hot', 'Blackbody', 'Earth', 'Electric', 'Viridis'}
+        Scale of the color bar
 
     colorbar_title : str, optional
         Color bar axis title, by default ""
@@ -92,17 +100,21 @@ def plot(
     elif not nx.get_node_attributes(G, "pos"):
         _apply_layout(G, "random")
 
-    node_trace, edge_trace = _generate_scatter_trace(
+    node_trace, edge_trace, middle_node_trace = _generate_scatter_trace(
         G,
-        sizing_method=sizing_method,
+        size_method=size_method,
         color_method=color_method,
+        colorscale=colorscale,
         colorbar_title=colorbar_title,
         node_text=node_text,
+        show_edgetext=show_edgetext,
     )
 
     fig = _generate_figure(
+        G,
         node_trace,
         edge_trace,
+        middle_node_trace,
         title=title,
         titlefont_size=titlefont_size,
         showlegend=showlegend,
@@ -114,88 +126,42 @@ def plot(
 
 def _generate_scatter_trace(
     G,
-    sizing_method: Union[str, list],
+    size_method: Union[str, list],
     color_method: Union[str, list],
+    colorscale: str,
     colorbar_title: str,
     node_text: list,
+    show_edgetext: bool,
 ):
     """
     Helper function to generate Scatter plot traces for the graph.
     """
 
-    edge_x = []
-    edge_y = []
-    node_x = []
-    node_y = []
-    node_size = []
-    color = []
-    node_text_list = []
-
-    for edge in G.edges():
-        x0, y0 = G.nodes[edge[0]]["pos"]
-        x1, y1 = G.nodes[edge[1]]["pos"]
-        edge_x.append(x0)
-        edge_x.append(x1)
-        edge_x.append(None)
-        edge_y.append(y0)
-        edge_y.append(y1)
-        edge_y.append(None)
+    edge_text_list = []
+    edge_properties = {}
 
     edge_trace = go.Scatter(
-        x=edge_x,
-        y=edge_y,
-        line=dict(width=0.5, color="#888"),
-        hoverinfo="none",
-        mode="lines",
+        x=[], y=[], line=dict(width=1, color="#888"), hoverinfo="text", mode="lines",
     )
 
-    for node in G.nodes():
-        text = f"Degree: {G.degree(node)}"
-
-        x, y = G.nodes[node]["pos"]
-        node_x.append(x)
-        node_y.append(y)
-
-        if node_text:
-
-            for prop in node_text:
-                text += f"<br></br>{prop}: {G.nodes[node][prop]}"
-
-        node_text_list.append(text.strip())
-
-        if isinstance(sizing_method, list):
-            node_size = sizing_method
-        else:
-            if sizing_method == "degree":
-                node_size.append(G.degree(node) * 2)
-            elif sizing_method == "static":
-                node_size.append(12)
-            else:
-                node_size.append(G.nodes[node][sizing_method])
-
-        if isinstance(color_method, list):
-            color = color_method
-        else:
-            if color_method == "degree":
-                color.append(G.degree(node))
-            else:
-                # Look for the property, otherwise look for a color code
-                # If none exist, throw an error
-                if color_method in G.nodes[node]:
-                    color.append(G.nodes[node][color_method])
-                else:
-                    color.append(color_method)
+    # NOTE: This is a hack because Plotly does not allow you to have hover text on a line
+    # Were adding an invisible node to the edges that will display the edge properties
+    middle_node_trace = go.Scatter(
+        x=[], y=[], text=[], mode="markers", hoverinfo="text", marker=dict(opacity=0)
+    )
 
     node_trace = go.Scatter(
-        x=node_x,
-        y=node_y,
+        x=[],
+        y=[],
         mode="markers",
+        text=[],
         hoverinfo="text",
         marker=dict(
             showscale=True,
-            colorscale="YlGnBu",
+            colorscale=colorscale,
             reversescale=True,
-            size=node_size,
+            size=[],
+            color=[],
             colorbar=dict(
                 thickness=15, title=colorbar_title, xanchor="left", titleside="right"
             ),
@@ -203,37 +169,135 @@ def _generate_scatter_trace(
         ),
     )
 
-    node_trace.marker.color = color
-    node_trace.text = node_text_list
+    for edge in G.edges(data=True):
+        x0, y0 = G.nodes[edge[0]]["pos"]
+        x1, y1 = G.nodes[edge[1]]["pos"]
+        edge_trace["x"] += tuple([x0, x1, None])
+        edge_trace["y"] += tuple([y0, y1, None])
 
-    return node_trace, edge_trace
+        if show_edgetext:
+            # Now we can add the text
+            # First we need to aggregate all the properties for each edge
+            edge_pair = (edge[0], edge[1])
+            # if an edge property for an edge hasn't been tracked, add an entry
+            if edge_pair not in edge_properties:
+                edge_properties[edge_pair] = {}
+
+                # Since we haven't seen this node combination before also add it to the trace
+                middle_node_trace["x"] += tuple([(x0 + x1) / 2])
+                middle_node_trace["y"] += tuple([(y0 + y1) / 2])
+
+            # For each edge property, create an entry for that edge, keeping track of the property name and its values
+            # If it doesn't exist, add an entry
+            for k, v in edge[2].items():
+                if k not in edge_properties[edge_pair]:
+                    edge_properties[edge_pair][k] = []
+
+                edge_properties[edge_pair][k] += [v]
+
+    for node in G.nodes():
+        text = f"Node: {node}<br>Degree: {G.degree(node)}"
+
+        x, y = G.nodes[node]["pos"]
+        node_trace["x"] += tuple([x])
+        node_trace["y"] += tuple([y])
+
+        if node_text:
+
+            for prop in node_text:
+                text += f"<br></br>{prop}: {G.nodes[node][prop]}"
+
+        node_trace["text"] += tuple([text.strip()])
+
+        if isinstance(size_method, list):
+            node_trace["marker"]["size"] = size_method
+        else:
+            if size_method == "degree":
+                node_trace["marker"]["size"] += tuple([G.degree(node) * 2])
+            elif size_method == "static":
+                node_trace["marker"]["size"] += tuple([12])
+            else:
+                node_trace["marker"]["size"] += tuple([G.nodes[node][size_method]])
+
+        if isinstance(color_method, list):
+            node_trace["marker"]["color"] = color_method
+        else:
+            if color_method == "degree":
+                node_trace["marker"]["color"] += tuple([G.degree(node)])
+            else:
+                # Look for the property, otherwise look for a color code
+                # If none exist, throw an error
+                if color_method in G.nodes[node]:
+                    node_trace["marker"]["color"] += tuple(
+                        [G.nodes[node][color_method]]
+                    )
+                else:
+                    node_trace["marker"]["color"] += tuple([color_method])
+
+    if show_edgetext:
+
+        edge_text_list = [
+            "\n".join(f"{k}: {v}" for k, v in vals.items())
+            for _, vals in edge_properties.items()
+        ]
+
+        middle_node_trace["text"] = edge_text_list
+
+    return node_trace, edge_trace, middle_node_trace
 
 
 def _generate_figure(
-    node_trace, edge_trace, title, titlefont_size, showlegend, annotation_text
+    G,
+    node_trace,
+    edge_trace,
+    middle_node_trace,
+    title,
+    titlefont_size,
+    showlegend,
+    annotation_text,
 ):
     """
     Helper function to generate the figure for the Graph.
     """
 
+    annotations = [
+        dict(
+            text=annotation_text,
+            showarrow=False,
+            xref="paper",
+            yref="paper",
+            x=0.005,
+            y=-0.002,
+        )
+    ]
+
+    if isinstance(G, (nx.DiGraph, nx.MultiDiGraph)):
+
+        for edge in G.edges():
+            annotations.append(
+                dict(
+                    ax=G.nodes[edge[0]]["pos"][0],
+                    ay=G.nodes[edge[0]]["pos"][1],
+                    axref="x",
+                    ayref="y",
+                    x=G.nodes[edge[1]]["pos"][0],
+                    y=G.nodes[edge[1]]["pos"][1],
+                    xref="x",
+                    yref="y",
+                    showarrow=True,
+                    arrowhead=1,
+                )
+            )
+
     fig = go.Figure(
-        data=[edge_trace, node_trace],
+        data=[edge_trace, node_trace, middle_node_trace],
         layout=go.Layout(
             title=title,
             titlefont_size=titlefont_size,
             showlegend=showlegend,
             hovermode="closest",
             margin=dict(b=20, l=5, r=5, t=40),
-            annotations=[
-                dict(
-                    text=annotation_text,
-                    showarrow=False,
-                    xref="paper",
-                    yref="paper",
-                    x=0.005,
-                    y=-0.002,
-                )
-            ],
+            annotations=annotations,
             xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
             yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
         ),

@@ -141,7 +141,7 @@ def _generate_scatter_trace(
     edge_properties = {}
 
     edge_trace = go.Scatter(
-        x=[], y=[], line=dict(width=1, color="#888"), hoverinfo="text", mode="lines",
+        x=[], y=[], line=dict(width=2, color="#888"), hoverinfo="text", mode="lines",
     )
 
     # NOTE: This is a hack because Plotly does not allow you to have hover text on a line
@@ -213,7 +213,7 @@ def _generate_scatter_trace(
             node_trace["marker"]["size"] = size_method
         else:
             if size_method == "degree":
-                node_trace["marker"]["size"] += tuple([G.degree(node) * 2])
+                node_trace["marker"]["size"] += tuple([G.degree(node) + 12])
             elif size_method == "static":
                 node_trace["marker"]["size"] += tuple([12])
             else:

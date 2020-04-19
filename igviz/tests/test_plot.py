@@ -7,6 +7,7 @@ import igviz as ig
 def G():
     G = nx.random_geometric_graph(50, 0.125)
     nx.set_node_attributes(G, 3, "prop")
+    nx.set_edge_attributes(G, 12, "edge_prop")
 
     return G
 
@@ -37,14 +38,20 @@ def MG():
 
 def test_plot(G):
 
-    ig.plot(G)
+    ig.plot(
+        G,
+        node_label="prop",
+        node_label_position="middle center",
+        edge_label="edge_prop",
+        hover_edgetext=True,
+    )
 
     assert True
 
 
 def test_plot_fixed_size_color(G):
 
-    ig.plot(G, show_edgetext=True, size_method="static", color_method="#ffffff")
+    ig.plot(G, hover_edgetext=True, size_method="static", color_method="#ffffff")
 
     assert True
 

@@ -9,13 +9,17 @@ def plot(
     layout=None,
     size_method="degree",
     color_method="degree",
+    node_label="",
+    node_label_position="bottom center",
     node_text=[],
-    show_edgetext=False,
+    edge_label="",
+    hover_edgetext=False,
     titlefont_size=16,
     showlegend=False,
     annotation_text="",
     colorscale="YlGnBu",
     colorbar_title="",
+    arrow_size=2,
 ):
     """
     Plots a Graph using Plotly.
@@ -68,10 +72,19 @@ def plot(
 
             list: A list pertaining to the colour of the nodes.
 
+    node_label : str, optional
+        Node property to be show
+
+    node_label_position: str, optional
+        Position of the node label.
+        Either {'top left', 'top center', 'top right', 'middle left',
+            'middle center', 'middle right', 'bottom left', 'bottom
+            center', 'bottom right'}
+
     node_text : list, optional
         A list of node properties to display when hovering over the node.
 
-    show_edgetext : bool, optional
+    hover_edgetext : bool, optional
         True to display the edge properties on hover.
 
     titlefont_size : int, optional
@@ -88,6 +101,9 @@ def plot(
 
     colorbar_title : str, optional
         Color bar axis title, by default ""
+
+    arrow_size : int, optional
+        Size of the arrow for Directed Graphs and MultiGraphs, by default 2.
     
     Returns
     -------
@@ -106,8 +122,11 @@ def plot(
         color_method=color_method,
         colorscale=colorscale,
         colorbar_title=colorbar_title,
+        node_label=node_label,
+        node_label_position=node_label_position,
         node_text=node_text,
-        show_edgetext=show_edgetext,
+        edge_label=edge_label,
+        hover_edgetext=hover_edgetext,
     )
 
     fig = _generate_figure(
@@ -119,6 +138,7 @@ def plot(
         titlefont_size=titlefont_size,
         showlegend=showlegend,
         annotation_text=annotation_text,
+        arrow_size=arrow_size,
     )
 
     return fig
@@ -130,8 +150,11 @@ def _generate_scatter_trace(
     color_method: Union[str, list],
     colorscale: str,
     colorbar_title: str,
+    node_label: str,
+    node_label_position: str,
     node_text: list,
-    show_edgetext: bool,
+    edge_label: str,
+    hover_edgetext: bool,
 ):
     """
     Helper function to generate Scatter plot traces for the graph.
@@ -140,8 +163,16 @@ def _generate_scatter_trace(
     edge_text_list = []
     edge_properties = {}
 
+    node_mode = "markers" if not node_label else "markers+text"
+    edge_mode = "lines" if not edge_label else "lines+text"
+
     edge_trace = go.Scatter(
-        x=[], y=[], line=dict(width=2, color="#888"), hoverinfo="text", mode="lines",
+        x=[],
+        y=[],
+        line=dict(width=2, color="#888"),
+        text=[],
+        hoverinfo="text",
+        mode="lines",
     )
 
     # NOTE: This is a hack because Plotly does not allow you to have hover text on a line
@@ -153,9 +184,11 @@ def _generate_scatter_trace(
     node_trace = go.Scatter(
         x=[],
         y=[],
-        mode="markers",
+        mode=node_mode,
         text=[],
+        hovertext=[],
         hoverinfo="text",
+        textposition=node_label_position,
         marker=dict(
             showscale=True,
             colorscale=colorscale,
@@ -175,7 +208,7 @@ def _generate_scatter_trace(
         edge_trace["x"] += tuple([x0, x1, None])
         edge_trace["y"] += tuple([y0, y1, None])
 
-        if show_edgetext:
+        if hover_edgetext or edge_label:
             # Now we can add the text
             # First we need to aggregate all the properties for each edge
             edge_pair = (edge[0], edge[1])
@@ -189,11 +222,24 @@ def _generate_scatter_trace(
 
             # For each edge property, create an entry for that edge, keeping track of the property name and its values
             # If it doesn't exist, add an entry
-            for k, v in edge[2].items():
-                if k not in edge_properties[edge_pair]:
-                    edge_properties[edge_pair][k] = []
+            if hover_edgetext:
+                for k, v in edge[2].items():
+                    if k not in edge_properties[edge_pair]:
+                        edge_properties[edge_pair][k] = []
 
                 edge_properties[edge_pair][k] += [v]
+
+            if edge_label:
+                middle_node_trace["text"] += tuple([edge[2][edge_label]])
+                middle_node_trace["mode"] = "markers+text"
+
+    if hover_edgetext:
+        edge_text_list = [
+            "\n".join(f"{k}: {v}" for k, v in vals.items())
+            for _, vals in edge_properties.items()
+        ]
+
+        middle_node_trace["hovertext"] = edge_text_list
 
     for node in G.nodes():
         text = f"Node: {node}<br>Degree: {G.degree(node)}"
@@ -202,12 +248,14 @@ def _generate_scatter_trace(
         node_trace["x"] += tuple([x])
         node_trace["y"] += tuple([y])
 
-        if node_text:
+        if node_label:
+            node_trace["text"] += tuple([G.nodes[node][node_label]])
 
+        if node_text:
             for prop in node_text:
                 text += f"<br></br>{prop}: {G.nodes[node][prop]}"
 
-        node_trace["text"] += tuple([text.strip()])
+        node_trace["hovertext"] += tuple([text.strip()])
 
         if isinstance(size_method, list):
             node_trace["marker"]["size"] = size_method
@@ -215,7 +263,7 @@ def _generate_scatter_trace(
             if size_method == "degree":
                 node_trace["marker"]["size"] += tuple([G.degree(node) + 12])
             elif size_method == "static":
-                node_trace["marker"]["size"] += tuple([12])
+                node_trace["marker"]["size"] += tuple([28])
             else:
                 node_trace["marker"]["size"] += tuple([G.nodes[node][size_method]])
 
@@ -234,15 +282,6 @@ def _generate_scatter_trace(
                 else:
                     node_trace["marker"]["color"] += tuple([color_method])
 
-    if show_edgetext:
-
-        edge_text_list = [
-            "\n".join(f"{k}: {v}" for k, v in vals.items())
-            for _, vals in edge_properties.items()
-        ]
-
-        middle_node_trace["text"] = edge_text_list
-
     return node_trace, edge_trace, middle_node_trace
 
 
@@ -255,6 +294,7 @@ def _generate_figure(
     titlefont_size,
     showlegend,
     annotation_text,
+    arrow_size,
 ):
     """
     Helper function to generate the figure for the Graph.
@@ -286,6 +326,8 @@ def _generate_figure(
                     yref="y",
                     showarrow=True,
                     arrowhead=1,
+                    arrowsize=arrow_size,
+                    # arrowwidth=1.5,
                 )
             )
 

@@ -15,7 +15,7 @@ Introduction
 
 Interactive Graph Visualization (igviz) is a library to help visualize graphs interactively using Plotly. This library provides a customizable api for visualizing graphs in a neat, visually appealing plot. It keeps larger graphs much more clean by displaying minimal text information and highlights node properties and relationships using colour and size while providing the same text information when needed.
 
-.. image:: docs/images/default.png
+.. image:: images/default.png
 
 Usage
 =====
@@ -26,6 +26,7 @@ Basic
 -----
 
 .. code:: python
+
     import networkx as nx
     import igviz as ig
 
@@ -37,12 +38,13 @@ Basic
 
 The default plot colors and sizes the nodes by the Degree but it is configurable.
 
-.. image:: docs/images/default.png
+.. image:: images/default.png
 
 Configurations
 --------------
 
 .. code:: python
+
     ig.plot(
         G, # Your graph
         title="My Graph",
@@ -52,9 +54,10 @@ Configurations
         annotation_text="Visualization made by <a href='https://github.com/Ashton-Sidhu/plotly-graph'>igviz</a> & plotly.", # Adds a text annotation to the graph
     )
 
-.. image:: docs/images/config1.png
+.. image:: images/config1.png
 
 .. code:: python
+
     ig.plot(
         G,
         title="My Graph",
@@ -64,9 +67,10 @@ Configurations
     )
 
 
-.. image:: docs/images/config2.png
+.. image:: images/config2.png
 
 .. code:: python
+
     ig.plot(
         G,
         node_label="prop", # Display the "prop" attribute as a label on the node
@@ -76,7 +80,7 @@ Configurations
         edge_label_position="bottom center", # Display the edge label below the edge
     )
 
-.. image:: docs/images/labels.png
+.. image:: images/labels.png
 
 How to add your own custom sizing method and colour method
 ---------------------------------------------------------
@@ -84,6 +88,7 @@ How to add your own custom sizing method and colour method
 To add your own custom sizing and color method, just pass a list to the `size_method` and `color_method`.
 
 .. code:: python
+
     color_list = []
     sizing_list = []
 
@@ -102,7 +107,7 @@ To add your own custom sizing and color method, just pass a list to the `size_me
     )
 
 
-.. image:: docs/images/config3.png
+.. image:: images/config3.png
 
 Applying layouts
 ----------------
@@ -110,6 +115,7 @@ Applying layouts
 All layouts are calculated through the `pos` property on each node. Networkx has built in layouts you can use and can invoke through igviz.
 
 .. code:: python
+
     ig.plot(
         G,
         title="My Graph",
@@ -117,11 +123,12 @@ All layouts are calculated through the `pos` property on each node. Networkx has
     )
 
 
-.. image:: docs/images/config4.png
+.. image:: images/config4.png
 
 To add your own `pos` property you can set it via the `nx.set_node_attributes` function.
 
 .. code:: python
+
     pos_dict = {
         0: [1, 2], # X, Y coordinates for Node 0
         1: [1.5, 3], # X, Y coordinates for Node 1
@@ -140,12 +147,11 @@ Directed & Multi Graphs
 
 Igviz also plots Directed and Multigraphs with no configuration chages. For Directed Graphs the arrows are shown from node to node. For Multi Graphs only one edge is shown and it is recommended to set `show_edgetext=True` to display the weights of all edges between 2 Multi Graph nodes.
 
-Note: `show_edgetext=True` also works for vanilla and Directed Graphs.
-
 Directed Graph
 --------------
 
 .. code:: python
+
     def createDiGraph():
         # Create a directed graph (digraph) object; i.e., a graph in which the edges
         # have a direction associated with them.

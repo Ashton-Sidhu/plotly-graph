@@ -137,9 +137,7 @@ ig.plot(
 
 #### Directed & Multi Graphs
 
-Igviz also plots Directed and Multigraphs with no configuration chages. For Directed Graphs the arrows are shown from node to node. For Multi Graphs only one edge is shown and it is recommended to set `show_edgetext=True` to display the weights of all edges between 2 Multi Graph nodes.
-
-Note: `show_edgetext=True` also works for vanilla and Directed Graphs.
+Igviz also plots Directed and Multigraphs with no configuration chages. For Directed Graphs the arrows are shown from node to node. For Multi Graphs only one edge is shown and it is recommended to display edge properties via `edge_label` or `edge_text` to display the weights of all edges between 2 Multi Graph nodes.
 
 ##### Directed Graph
 
@@ -174,7 +172,7 @@ ig.plot(
     MG,
     layout="spring",
     size_method="static",
-    show_edgetext=True,
+    edge_text=["weight"],
     colorscale="Rainbow"
 )
 ```

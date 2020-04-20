@@ -20,6 +20,7 @@ def plot(
     annotation_text="",
     colorscale="YlGnBu",
     colorbar_title="",
+    node_opacity=1,
     arrow_size=2,
 ):
     """
@@ -112,6 +113,9 @@ def plot(
     colorbar_title : str, optional
         Color bar axis title, by default ""
 
+    node_opacity : int, optional
+        Opacity of the nodes (1 - filled in, 0 completely transparent), by default 1
+
     arrow_size : int, optional
         Size of the arrow for Directed Graphs and MultiGraphs, by default 2.
     
@@ -138,6 +142,7 @@ def plot(
         edge_label=edge_label,
         edge_label_position=edge_label_position,
         edge_text=edge_text,
+        node_opacity=1,
     )
 
     fig = _generate_figure(
@@ -167,6 +172,7 @@ def _generate_scatter_trace(
     edge_label: str,
     edge_label_position: str,
     edge_text: bool,
+    node_opacity: int,
 ):
     """
     Helper function to generate Scatter plot traces for the graph.
@@ -217,6 +223,7 @@ def _generate_scatter_trace(
                 thickness=15, title=colorbar_title, xanchor="left", titleside="right"
             ),
             line_width=2,
+            opacity=node_opacity,
         ),
     )
 
@@ -338,8 +345,14 @@ def _generate_figure(
                     ay=G.nodes[edge[0]]["pos"][1],
                     axref="x",
                     ayref="y",
-                    x=G.nodes[edge[1]]["pos"][0],
-                    y=G.nodes[edge[1]]["pos"][1],
+                    x=(
+                        G.nodes[edge[1]]["pos"][0] * 0.85
+                        + G.nodes[edge[0]]["pos"][0] * 0.15
+                    ),
+                    y=(
+                        G.nodes[edge[1]]["pos"][1] * 0.85
+                        + G.nodes[edge[0]]["pos"][1] * 0.15
+                    ),
                     xref="x",
                     yref="y",
                     showarrow=True,

@@ -213,7 +213,9 @@ ig.plot(
 
 - colorscale : Scale of the color bar ('Greys', 'YlGnBu', 'Greens', 'YlOrRd', 'Bluered', 'RdBu', 'Reds', 'Blues', 'Picnic', 'Rainbow', 'Portland', 'Jet', 'Hot', 'Blackbody', 'Earth', 'Electric', 'Viridis')
         
-- colorbar_title : Color bar axis title, by default ""
+- colorbar_title : Color bar axis title.
+
+- node_opacity : Opacity of the nodes (1 - filled in, 0 completely transparent), by default 1
 
 - arrow_size : Size of the arrow for Directed Graphs and MultiGraphs, by default 2.
 

@@ -32,6 +32,7 @@ Basic
 
     G = nx.random_geometric_graph(200, 0.125)
     nx.set_node_attributes(G, 3, "prop")
+    nx.set_edge_attributes(G, 5, "edge_prop")
 
     ig.plot(G)
 
@@ -145,8 +146,7 @@ To add your own `pos` property you can set it via the `nx.set_node_attributes` f
 Directed & Multi Graphs
 -----------------------
 
-Igviz also plots Directed and Multigraphs with no configuration chages. For Directed Graphs the arrows are shown from node to node. For Multi Graphs only one edge is shown and it is recommended to set `show_edgetext=True` to display the weights of all edges between 2 Multi Graph nodes.
-
+Igviz also plots Directed and Multigraphs with no configuration chages. For Directed Graphs the arrows are shown from node to node. For Multi Graphs only one edge is shown and it is recommended to display edge properties via `edge_label` or `edge_text` to display the weights of all edges between 2 Multi Graph nodes.
 Directed Graph
 --------------
 
@@ -170,12 +170,13 @@ Directed Graph
 
     ig.plot(DG, size_method="static")
 
-.. image:: docs/images/dg.png
+.. image:: images/dg.png
 
 Multi Graph
 -----------
 
 .. code:: python
+
     MG = nx.MultiGraph()
     MG.add_weighted_edges_from([(1, 2, 0.5), (1, 2, 0.75), (2, 3, 0.5)])
 
@@ -188,7 +189,7 @@ Multi Graph
     )
 
 
-.. image:: docs/images/mg.png
+.. image:: images/mg.png
 
 Installation
 ============

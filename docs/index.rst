@@ -184,7 +184,7 @@ Multi Graph
         MG,
         layout="spring",
         size_method="static",
-        show_edgetext=True,
+        edge_text=["weight"],
         colorscale="Rainbow"
     )
 

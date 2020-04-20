@@ -43,7 +43,7 @@ def test_plot(G):
         node_label="prop",
         node_label_position="middle center",
         edge_label="edge_prop",
-        hover_edgetext=True,
+        edge_text=["edge_prop"],
     )
 
     assert True
@@ -51,7 +51,7 @@ def test_plot(G):
 
 def test_plot_fixed_size_color(G):
 
-    ig.plot(G, hover_edgetext=True, size_method="static", color_method="#ffffff")
+    ig.plot(G, size_method="static", color_method="#ffffff")
 
     assert True
 

@@ -13,7 +13,8 @@ def plot(
     node_label_position="bottom center",
     node_text=[],
     edge_label="",
-    hover_edgetext=False,
+    edge_label_position="middle center",
+    edge_text=[],
     titlefont_size=16,
     showlegend=False,
     annotation_text="",
@@ -73,7 +74,7 @@ def plot(
             list: A list pertaining to the colour of the nodes.
 
     node_label : str, optional
-        Node property to be show
+        Node property to be shown on the node.
 
     node_label_position: str, optional
         Position of the node label.
@@ -84,8 +85,8 @@ def plot(
     node_text : list, optional
         A list of node properties to display when hovering over the node.
 
-    hover_edgetext : bool, optional
-        True to display the edge properties on hover.
+    edge_text : list, optional
+        A list of edge properties to display when hovering over the node.
 
     titlefont_size : int, optional
         Font size of the title, by default 16
@@ -126,7 +127,7 @@ def plot(
         node_label_position=node_label_position,
         node_text=node_text,
         edge_label=edge_label,
-        hover_edgetext=hover_edgetext,
+        edge_text=edge_text,
     )
 
     fig = _generate_figure(
@@ -154,7 +155,7 @@ def _generate_scatter_trace(
     node_label_position: str,
     node_text: list,
     edge_label: str,
-    hover_edgetext: bool,
+    edge_text: bool,
 ):
     """
     Helper function to generate Scatter plot traces for the graph.
@@ -208,7 +209,7 @@ def _generate_scatter_trace(
         edge_trace["x"] += tuple([x0, x1, None])
         edge_trace["y"] += tuple([y0, y1, None])
 
-        if hover_edgetext or edge_label:
+        if edge_text or edge_label:
             # Now we can add the text
             # First we need to aggregate all the properties for each edge
             edge_pair = (edge[0], edge[1])
@@ -222,18 +223,18 @@ def _generate_scatter_trace(
 
             # For each edge property, create an entry for that edge, keeping track of the property name and its values
             # If it doesn't exist, add an entry
-            if hover_edgetext:
-                for k, v in edge[2].items():
-                    if k not in edge_properties[edge_pair]:
-                        edge_properties[edge_pair][k] = []
+            if edge_text:
+                for prop in edge_text:
+                    if edge[2][prop] not in edge_properties[edge_pair]:
+                        edge_properties[edge_pair][prop] = []
 
-                edge_properties[edge_pair][k] += [v]
+                edge_properties[edge_pair][prop] += [edge[2][prop]]
 
             if edge_label:
                 middle_node_trace["text"] += tuple([edge[2][edge_label]])
                 middle_node_trace["mode"] = "markers+text"
 
-    if hover_edgetext:
+    if edge_text:
         edge_text_list = [
             "\n".join(f"{k}: {v}" for k, v in vals.items())
             for _, vals in edge_properties.items()

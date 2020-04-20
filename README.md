@@ -8,6 +8,7 @@
 - [Introduction](#introduction)
 - [Usage](#usage)
 - [Installation](#installation)
+- [Customizable Parameters](#customizable-parameters)
 - [Feedback](#feedback)
 - [Contributors](#contributors)
 
@@ -31,6 +32,7 @@ import igviz as ig
 
 G = nx.random_geometric_graph(200, 0.125)
 nx.set_node_attributes(G, 3, "prop")
+nx.set_edge_attributes(G, 5, "edge_prop")
 
 ig.plot(G)
 ```
@@ -64,6 +66,19 @@ ig.plot(
 ```
 
 ![](docs/images/config2.png)
+
+```python
+ig.plot(
+    G,
+    node_label="prop", # Display the "prop" attribute as a label on the node
+    node_label_position="top center", # Display the node label directly above the node
+    edge_text=["edge_prop"], # Display the "edge_prop" attribute on hover over the edge
+    edge_label="edge_prop", # Display the "edge_prop" attribute on the edge
+    edge_label_position="bottom center", # Display the edge label below the edge
+)
+```
+
+![](docs/images/labels.png)
 
 #### How to add your own custom sizing method and colour method
 
@@ -169,6 +184,38 @@ ig.plot(
 ## Installation
 
 `pip install igviz`
+
+## Customizable Parameters
+
+- title : Title of the graph, by default "Graph"
+
+- layout : Layout of the nodes on the plot ("random", "circular", "kamada", "planar", "spring", "spectral", "spiral"}, optional).
+            
+- size_method : How to size the nodes., by default "degree"
+
+- color_method : How to color the node., by default "degree"
+
+- node_label : Node property to be shown on the node.
+
+- node_label_position: Position of the node label.
+        
+- node_text : A list of node properties to display when hovering over the node.
+
+- edge_label : Edge property to be shown on the edge.
+
+- edge_label_position: Position of the edge label.
+
+- edge_text : A list of edge properties to display when hovering over the edge.
+
+- titlefont_size : Font size of the title, by default 16
+
+- annotation_text : Graph annotation text
+
+- colorscale : Scale of the color bar ('Greys', 'YlGnBu', 'Greens', 'YlOrRd', 'Bluered', 'RdBu', 'Reds', 'Blues', 'Picnic', 'Rainbow', 'Portland', 'Jet', 'Hot', 'Blackbody', 'Earth', 'Electric', 'Viridis')
+        
+- colorbar_title : Color bar axis title, by default ""
+
+- arrow_size : Size of the arrow for Directed Graphs and MultiGraphs, by default 2.
 
 ## Feedback
 

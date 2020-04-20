@@ -86,7 +86,16 @@ def plot(
         A list of node properties to display when hovering over the node.
 
     edge_text : list, optional
-        A list of edge properties to display when hovering over the node.
+        A list of edge properties to display when hovering over the edge.
+    
+    edge_label : str, optional
+        Edge property to be shown on the edge.
+
+    edge_label_position: str, optional
+        Position of the edge label.
+        Either {'top left', 'top center', 'top right', 'middle left',
+            'middle center', 'middle right', 'bottom left', 'bottom
+            center', 'bottom right'}
 
     titlefont_size : int, optional
         Font size of the title, by default 16
@@ -127,6 +136,7 @@ def plot(
         node_label_position=node_label_position,
         node_text=node_text,
         edge_label=edge_label,
+        edge_label_position=edge_label_position,
         edge_text=edge_text,
     )
 
@@ -155,6 +165,7 @@ def _generate_scatter_trace(
     node_label_position: str,
     node_text: list,
     edge_label: str,
+    edge_label_position: str,
     edge_text: bool,
 ):
     """
@@ -179,7 +190,13 @@ def _generate_scatter_trace(
     # NOTE: This is a hack because Plotly does not allow you to have hover text on a line
     # Were adding an invisible node to the edges that will display the edge properties
     middle_node_trace = go.Scatter(
-        x=[], y=[], text=[], mode="markers", hoverinfo="text", marker=dict(opacity=0)
+        x=[],
+        y=[],
+        text=[],
+        mode="markers",
+        hoverinfo="text",
+        textposition=edge_label_position,
+        marker=dict(opacity=0),
     )
 
     node_trace = go.Scatter(

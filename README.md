@@ -185,37 +185,37 @@ ig.plot(
 
 ## Customizable Parameters
 
-- title : Title of the graph, by default "Graph"
+- `title` : Title of the graph, by default "Graph"
 
-- layout : Layout of the nodes on the plot ("random", "circular", "kamada", "planar", "spring", "spectral", "spiral"}, optional).
+- `layout` : Layout of the nodes on the plot ("random", "circular", "kamada", "planar", "spring", "spectral", "spiral"}, optional).
             
-- size_method : How to size the nodes., by default "degree"
+- `size_method` : How to size the nodes., by default "degree"
 
-- color_method : How to color the node., by default "degree"
+- `color_method` : How to color the node., by default "degree"
 
-- node_label : Node property to be shown on the node.
+- `node_label` : Node property to be shown on the node.
 
-- node_label_position: Position of the node label.
+- `node_label_position` : Position of the node label.
         
-- node_text : A list of node properties to display when hovering over the node.
+- `node_text` : A list of node properties to display when hovering over the node.
 
-- edge_label : Edge property to be shown on the edge.
+- `edge_label` : Edge property to be shown on the edge.
 
-- edge_label_position: Position of the edge label.
+- `edge_label_position` : Position of the edge label.
 
-- edge_text : A list of edge properties to display when hovering over the edge.
+- `edge_text` : A list of edge properties to display when hovering over the edge.
 
-- titlefont_size : Font size of the title, by default 16
+- `titlefont_size` : Font size of the title, by default 16
 
-- annotation_text : Graph annotation text
+- `annotation_text` : Graph annotation text
 
-- colorscale : Scale of the color bar ('Greys', 'YlGnBu', 'Greens', 'YlOrRd', 'Bluered', 'RdBu', 'Reds', 'Blues', 'Picnic', 'Rainbow', 'Portland', 'Jet', 'Hot', 'Blackbody', 'Earth', 'Electric', 'Viridis')
+- `colorscale` : Scale of the color bar ('Greys', 'YlGnBu', 'Greens', 'YlOrRd', 'Bluered', 'RdBu', 'Reds', 'Blues', 'Picnic', 'Rainbow', 'Portland', 'Jet', 'Hot', 'Blackbody', 'Earth', 'Electric', 'Viridis')
         
-- colorbar_title : Color bar axis title.
+- `colorbar_title` : Color bar axis title.
 
-- node_opacity : Opacity of the nodes (1 - filled in, 0 completely transparent), by default 1
+- `node_opacity` : Opacity of the nodes (1 - filled in, 0 completely transparent), by default 1
 
-- arrow_size : Size of the arrow for Directed Graphs and MultiGraphs, by default 2.
+- `arrow_size` : Size of the arrow for Directed Graphs and MultiGraphs, by default 2.
 
 ## Feedback
 

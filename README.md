@@ -48,7 +48,7 @@ ig.plot(
     G, # Your graph
     title="My Graph",
     size_method="static", # Makes node sizes the same
-    color_method="##ffcccb", # Makes all the node colours black,
+    color_method="#ffcccb", # Makes all the node colours black,
     node_text=["prop"], # Adds the 'prop' property to the hover text of the node
     annotation_text="Visualization made by <a href='https://github.com/Ashton-Sidhu/plotly-graph'>igviz</a> & plotly.", # Adds a text annotation to the graph
 )

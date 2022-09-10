@@ -25,6 +25,7 @@ def plot(
     node_opacity: float = 1.0,
     arrow_size: int = 2,
     transparent_background: bool = True,
+    highlight_neighbours_on_hover: bool = True,
 ):
     """
     Plots a Graph using Plotly.
@@ -125,6 +126,9 @@ def plot(
     transparent_background : bool, optional
         True to have a transparent background, by default True
 
+    highlight_neighbours_on_hover : bool, optional
+        True to highlight the neighbours of a node on hover, by default True
+
     Returns
     -------
     Plotly Figure
@@ -160,6 +164,7 @@ def plot(
         annotation_text=annotation_text,
         arrow_size=arrow_size,
         transparent_background=transparent_background,
+        highlight_neighbours_on_hover=highlight_neighbours_on_hover,
     )
 
 
@@ -172,9 +177,13 @@ class PlotGraph:
         self.layout = layout
 
         if layout:
-            self._apply_layout(G, layout)
+            self.pos_dict = self._apply_layout(G, layout)
         elif not nx.get_node_attributes(G, "pos"):
-            self._apply_layout(G, "random")
+            self.pos_dict = self._apply_layout(G, "random")
+        else:
+            self.pos_dict = nx.get_node_attributes(G, "pos")
+
+        self.inverse_pos_dict = {(v[0], v[1]): k for k, v in self.pos_dict.items()}
 
     def generate_node_traces(
         self,
@@ -345,6 +354,7 @@ class PlotGraph:
         annotation_text,
         arrow_size: int,
         transparent_background: bool,
+        highlight_neighbours_on_hover: bool,
     ):
         """
         Helper function to generate the figure for the Graph.
@@ -403,10 +413,11 @@ class PlotGraph:
                 plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)"
             )
 
-        self.original_node_trace = node_trace
+        if highlight_neighbours_on_hover:
+            self.original_node_trace = node_trace
 
-        self.f.data[1].on_hover(self.on_hover)
-        self.f.data[1].on_unhover(self.on_unhover)
+            self.f.data[1].on_hover(self.on_hover)
+            self.f.data[1].on_unhover(self.on_unhover)
 
         return self.f
 
@@ -425,9 +436,11 @@ class PlotGraph:
             "spiral": nx.spiral_layout,
         }
 
-        self.pos_dict = layout_functions[layout](G)
+        pos_dict = layout_functions[layout](G)
 
-        nx.set_node_attributes(G, self.pos_dict, "pos")
+        nx.set_node_attributes(G, pos_dict, "pos")
+
+        return pos_dict
 
     def on_hover(
         self,
@@ -448,9 +461,12 @@ class PlotGraph:
             Input device state, e.g. what keys were pressed
         """
 
-        graph: nx.Graph = self.G
+        if not points.point_inds:
+            return
 
-        neighbours = list(graph.neighbors(points.point_inds[0]))
+        node = self.inverse_pos_dict[(points.xs[0], points.ys[0])]
+
+        neighbours = list(self.G.neighbors(node))
 
         c = list(trace.marker.color)
         s = list(trace.marker.size)
@@ -460,12 +476,14 @@ class PlotGraph:
         new_colors[points.point_inds[0]] = c[points.point_inds[0]]
 
         for i in neighbours:
-            new_colors[i] = c[i]
+            trace_position = list(self.pos_dict).index(i)
+
+            new_colors[trace_position] = c[trace_position]
             # c[i] = "#EBEBEB"
             # s[i] = 20
-            with self.f.batch_update():
-                trace.marker.color = new_colors
-                # trace.marker.size = s
+        with self.f.batch_update():
+            trace.marker.color = new_colors
+            # trace.marker.size = s
 
     def on_unhover(
         self,

@@ -24,6 +24,7 @@ def plot(
     colorbar_title: str = None,
     node_opacity: float = 1.0,
     arrow_size: int = 2,
+    transparent_background: bool = True,
 ):
     """
     Plots a Graph using Plotly.
@@ -107,19 +108,22 @@ def plot(
         True to show legend, by default False
 
     annotation_text : str, optional
-        Graph annotation text, by default ""
+        Graph annotation text, by default None
 
     colorscale : {'Greys', 'YlGnBu', 'Greens', 'YlOrRd', 'Bluered', 'RdBu', 'Reds', 'Blues', 'Picnic', 'Rainbow', 'Portland', 'Jet', 'Hot', 'Blackbody', 'Earth', 'Electric', 'Viridis'}
         Scale of the color bar
 
     colorbar_title : str, optional
-        Color bar axis title, by default ""
+        Color bar axis title, by default None
 
     node_opacity : int, optional
         Opacity of the nodes (1 - filled in, 0 completely transparent), by default 1
 
     arrow_size : int, optional
         Size of the arrow for Directed Graphs and MultiGraphs, by default 2.
+
+    transparent_background : bool, optional
+        True to have a transparent background, by default True
 
     Returns
     -------
@@ -155,6 +159,7 @@ def plot(
         showlegend=showlegend,
         annotation_text=annotation_text,
         arrow_size=arrow_size,
+        transparent_background=transparent_background,
     )
 
 
@@ -334,15 +339,20 @@ class PlotGraph:
         node_trace: go.Scatter,
         edge_trace: go.Scatter,
         middle_node_trace: go.Scatter,
-        title,
-        titlefont_size,
-        showlegend,
+        title: str,
+        titlefont_size: int,
+        showlegend: bool,
         annotation_text,
-        arrow_size,
+        arrow_size: int,
+        transparent_background: bool,
     ):
         """
         Helper function to generate the figure for the Graph.
         """
+
+        if not annotation_text:
+            annotation_text = ""
+
         annotations = [
             dict(
                 text=annotation_text,
@@ -387,6 +397,11 @@ class PlotGraph:
                 yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
             ),
         )
+
+        if transparent_background:
+            self.f.update_layout(
+                plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)"
+            )
 
         self.original_node_trace = node_trace
 
@@ -440,12 +455,17 @@ class PlotGraph:
         c = list(trace.marker.color)
         s = list(trace.marker.size)
 
+        new_colors = ["#E4E4E4"] * len(c)
+
+        new_colors[points.point_inds[0]] = c[points.point_inds[0]]
+
         for i in neighbours:
-            c[i] = "#bae2be"
-            s[i] = 20
+            new_colors[i] = c[i]
+            # c[i] = "#EBEBEB"
+            # s[i] = 20
             with self.f.batch_update():
-                trace.marker.color = c
-                trace.marker.size = s
+                trace.marker.color = new_colors
+                # trace.marker.size = s
 
     def on_unhover(
         self,

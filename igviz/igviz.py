@@ -289,6 +289,8 @@ class PlotGraph:
         edge_mode = "lines+text" if edge_label else "lines"
         edge_text_list = []
         edge_properties = {}
+
+        # This trace is for the actual lines that appear on the plot
         edge_trace = go.Scatter(
             x=[],
             y=[],
@@ -469,7 +471,7 @@ class PlotGraph:
         neighbours = list(self.G.neighbors(node))
 
         c = list(trace.marker.color)
-        s = list(trace.marker.size)
+        # s = list(trace.marker.size)
 
         new_colors = ["#E4E4E4"] * len(c)
 

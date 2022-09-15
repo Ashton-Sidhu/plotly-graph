@@ -9,6 +9,7 @@ license = "MIT"
 python = ">=3.8,<3.12"
 networkx = "^2.8.5"
 plotly = "^5.10.0"
+ipywidgets = "^8.0.2"
 
 [tool.poetry.dev-dependencies]
 black = "^22.6.0"

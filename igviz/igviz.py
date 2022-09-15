@@ -136,7 +136,11 @@ def plot(
         Plotly figure of the graph
     """
 
-    warn("Argument `titlefont_size` is deprecated and will be removed in 0.6.0.")
+    warn(
+        "Argument `titlefont_size` is deprecated and will be removed in 0.6.0.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
 
     plot = PlotGraph(G, layout)
 

@@ -1,27 +1,31 @@
-import plotly.graph_objects as go
+from typing import List, Tuple, Union
+
 import networkx as nx
-from typing import Union
+import plotly.graph_objects as go
+from plotly import callbacks
 
 
 def plot(
     G,
-    title="Graph",
-    layout=None,
-    size_method="degree",
-    color_method="degree",
-    node_label="",
-    node_label_position="bottom center",
-    node_text=[],
-    edge_label="",
-    edge_label_position="middle center",
-    edge_text=[],
-    titlefont_size=16,
-    showlegend=False,
-    annotation_text="",
-    colorscale="YlGnBu",
-    colorbar_title="",
-    node_opacity=1,
-    arrow_size=2,
+    title: str = "Graph",
+    layout: str = None,
+    size_method: str = "degree",
+    color_method: str = "degree",
+    node_label: str = None,
+    node_label_position: str = "bottom center",
+    node_text: List[str] = None,
+    edge_label: str = None,
+    edge_label_position: str = "middle center",
+    edge_text: List[str] = None,
+    titlefont_size: int = 16,
+    showlegend: bool = False,
+    annotation_text: str = None,
+    colorscale: str = "YlGnBu",
+    colorbar_title: str = None,
+    node_opacity: float = 1.0,
+    arrow_size: int = 2,
+    transparent_background: bool = True,
+    highlight_neighbours_on_hover: bool = True,
 ):
     """
     Plots a Graph using Plotly.
@@ -105,13 +109,13 @@ def plot(
         True to show legend, by default False
 
     annotation_text : str, optional
-        Graph annotation text, by default ""
+        Graph annotation text, by default None
 
     colorscale : {'Greys', 'YlGnBu', 'Greens', 'YlOrRd', 'Bluered', 'RdBu', 'Reds', 'Blues', 'Picnic', 'Rainbow', 'Portland', 'Jet', 'Hot', 'Blackbody', 'Earth', 'Electric', 'Viridis'}
         Scale of the color bar
 
     colorbar_title : str, optional
-        Color bar axis title, by default ""
+        Color bar axis title, by default None
 
     node_opacity : int, optional
         Opacity of the nodes (1 - filled in, 0 completely transparent), by default 1
@@ -119,32 +123,38 @@ def plot(
     arrow_size : int, optional
         Size of the arrow for Directed Graphs and MultiGraphs, by default 2.
 
+    transparent_background : bool, optional
+        True to have a transparent background, by default True
+
+    highlight_neighbours_on_hover : bool, optional
+        True to highlight the neighbours of a node on hover, by default True
+
     Returns
     -------
     Plotly Figure
         Plotly figure of the graph
     """
-    if layout:
-        _apply_layout(G, layout)
-    elif not nx.get_node_attributes(G, "pos"):
-        _apply_layout(G, "random")
-    node_trace, edge_trace, middle_node_trace = _generate_scatter_trace(
-        G,
-        size_method=size_method,
-        color_method=color_method,
+
+    plot = PlotGraph(G, layout)
+
+    node_trace = plot.generate_node_traces(
         colorscale=colorscale,
         colorbar_title=colorbar_title,
+        color_method=color_method,
         node_label=node_label,
-        node_label_position=node_label_position,
         node_text=node_text,
+        node_label_position=node_label_position,
+        node_opacity=node_opacity,
+        size_method=size_method,
+    )
+
+    edge_trace, middle_node_trace = plot.generate_edge_traces(
         edge_label=edge_label,
         edge_label_position=edge_label_position,
         edge_text=edge_text,
-        node_opacity=node_opacity,
     )
 
-    return _generate_figure(
-        G,
+    return plot.generate_figure(
         node_trace,
         edge_trace,
         middle_node_trace,
@@ -153,214 +163,349 @@ def plot(
         showlegend=showlegend,
         annotation_text=annotation_text,
         arrow_size=arrow_size,
+        transparent_background=transparent_background,
+        highlight_neighbours_on_hover=highlight_neighbours_on_hover,
     )
 
 
-def _generate_scatter_trace(
-    G,
-    size_method: Union[str, list],
-    color_method: Union[str, list],
-    colorscale: str,
-    colorbar_title: str,
-    node_label: str,
-    node_label_position: str,
-    node_text: list,
-    edge_label: str,
-    edge_label_position: str,
-    edge_text: bool,
-    node_opacity: int,
-):
-    """
-    Helper function to generate Scatter plot traces for the graph.
-    """
-    edge_text_list = []
-    edge_properties = {}
-    node_mode = "markers+text" if node_label else "markers"
-    edge_mode = "lines+text" if edge_label else "lines"
-    edge_trace = go.Scatter(
-        x=[],
-        y=[],
-        line=dict(width=2, color="#888"),
-        text=[],
-        hoverinfo="text",
-        mode=edge_mode,
-    )
+class PlotGraph:
+    def __init__(self, G: nx.Graph, layout: str):
+        """
+        PlotGraph is a class that plots a graph.
+        """
+        self.G: nx.Graph = G
+        self.layout = layout
 
-    # NOTE: This is a hack because Plotly does not allow you to have hover text on a line
-    # Were adding an invisible node to the edges that will display the edge properties
-    middle_node_trace = go.Scatter(
-        x=[],
-        y=[],
-        text=[],
-        mode="markers",
-        hoverinfo="text",
-        textposition=edge_label_position,
-        marker=dict(opacity=0),
-    )
+        if layout:
+            self.pos_dict = self._apply_layout(G, layout)
+        elif not nx.get_node_attributes(G, "pos"):
+            self.pos_dict = self._apply_layout(G, "random")
+        else:
+            self.pos_dict = nx.get_node_attributes(G, "pos")
 
-    node_trace = go.Scatter(
-        x=[],
-        y=[],
-        mode=node_mode,
-        text=[],
-        hovertext=[],
-        hoverinfo="text",
-        textposition=node_label_position,
-        marker=dict(
-            showscale=True,
-            colorscale=colorscale,
-            reversescale=True,
-            size=[],
-            color=[],
-            colorbar=dict(
-                thickness=15, title=colorbar_title, xanchor="left", titleside="right"
+        self.inverse_pos_dict = {(v[0], v[1]): k for k, v in self.pos_dict.items()}
+
+    def generate_node_traces(
+        self,
+        colorscale: str,
+        colorbar_title: str,
+        color_method: Union[str, List[str]],
+        node_label: str,
+        node_text: List[str],
+        node_label_position: str,
+        node_opacity: float,
+        size_method: Union[str, List[str]],
+    ):
+
+        node_mode = "markers+text" if node_label else "markers"
+        node_trace = go.Scatter(
+            x=[],
+            y=[],
+            mode=node_mode,
+            text=[],
+            hovertext=[],
+            hoverinfo="text",
+            textposition=node_label_position,
+            marker=dict(
+                showscale=True,
+                colorscale=colorscale,
+                reversescale=True,
+                size=[],
+                color=[],
+                colorbar=dict(
+                    thickness=15,
+                    title=colorbar_title,
+                    xanchor="left",
+                    titleside="right",
+                ),
+                line_width=0,
+                opacity=node_opacity,
             ),
-            line_width=2,
-            opacity=node_opacity,
-        ),
-    )
+        )
 
-    for edge in G.edges(data=True):
-        x0, y0 = G.nodes[edge[0]]["pos"]
-        x1, y1 = G.nodes[edge[1]]["pos"]
-        edge_trace["x"] += (x0, x1, None)
-        edge_trace["y"] += (y0, y1, None)
+        for node in self.G.nodes():
+            text = f"Node: {node}<br>Degree: {self.G.degree(node)}"
+            x, y = self.G.nodes[node]["pos"]
 
-        if edge_text or edge_label:
-            edge_pair = edge[0], edge[1]
-            if edge_pair not in edge_properties:
-                edge_properties[edge_pair] = {}
-                middle_node_trace["x"] += ((x0 + x1) / 2,)
-                middle_node_trace["y"] += ((y0 + y1) / 2,)
+            node_trace["x"] += (x,)
+            node_trace["y"] += (y,)
+
+            if node_label:
+                node_trace["text"] += (self.G.nodes[node][node_label],)
+            if node_text:
+                for prop in node_text:
+                    text += f"<br></br>{prop}: {self.G.nodes[node][prop]}"
+            node_trace["hovertext"] += (text.strip(),)
+
+            if isinstance(size_method, list):
+                node_trace["marker"]["size"] = size_method
+            elif size_method == "degree":
+                node_trace["marker"]["size"] += (self.G.degree(node) + 12,)
+            elif size_method == "static":
+                node_trace["marker"]["size"] += (28,)
+            else:
+                node_trace["marker"]["size"] += (self.G.nodes[node][size_method],)
+
+            if isinstance(color_method, list):
+                node_trace["marker"]["color"] = color_method
+            elif color_method == "degree":
+                node_trace["marker"]["color"] += (self.G.degree(node),)
+            else:
+                node_trace["marker"]["color"] += (
+                    (self.G.nodes[node][color_method],)
+                    if color_method in self.G.nodes[node]
+                    else (color_method,)
+                )
+
+        return node_trace
+
+    def generate_edge_traces(
+        self, edge_label: str, edge_label_position: str, edge_text: List[str]
+    ) -> Tuple[go.Scatter, go.Scatter]:
+        """
+        Generates the edge traces for the graph.
+
+        Parameters
+        ----------
+        edge_label : str, optional
+            Edge property to be shown on the edge.
+
+
+        edge_label_position: str, optional
+            Position of the edge label.
+            Either {'top left', 'top center', 'top right', 'middle left',
+                'middle center', 'middle right', 'bottom left', 'bottom
+                center', 'bottom right'}
+
+        edge_text : list, optional
+            A list of edge properties to display when hovering over the edge.
+
+        Returns
+        -------
+        Tuple[go.Scatter, go.Scatter]
+            Lines and invisible nodes for the edges.
+        """
+
+        edge_mode = "lines+text" if edge_label else "lines"
+        edge_text_list = []
+        edge_properties = {}
+
+        # This trace is for the actual lines that appear on the plot
+        edge_trace = go.Scatter(
+            x=[],
+            y=[],
+            line=dict(width=2, color="#888"),
+            text=[],
+            hoverinfo="text",
+            mode=edge_mode,
+        )
+
+        # NOTE: This is a hack because Plotly does not allow you to have hover text on a line
+        # Were adding an invisible node to the edges that will display the edge properties
+        middle_node_trace = go.Scatter(
+            x=[],
+            y=[],
+            text=[],
+            mode="markers",
+            hoverinfo="text",
+            textposition=edge_label_position,
+            marker=dict(opacity=0),
+        )
+
+        for edge in self.G.edges(data=True):
+            x0, y0 = self.G.nodes[edge[0]]["pos"]
+            x1, y1 = self.G.nodes[edge[1]]["pos"]
+            edge_trace["x"] += (x0, x1, None)
+            edge_trace["y"] += (y0, y1, None)
+
+            if edge_text or edge_label:
+                edge_pair = edge[0], edge[1]
+                if edge_pair not in edge_properties:
+                    edge_properties[edge_pair] = {}
+                    middle_node_trace["x"] += ((x0 + x1) / 2,)
+                    middle_node_trace["y"] += ((y0 + y1) / 2,)
+
+            if edge_text:
+                for prop in edge_text:
+                    if edge[2][prop] not in edge_properties[edge_pair]:
+                        edge_properties[edge_pair][prop] = []
+                edge_properties[edge_pair][prop] += [edge[2][prop]]
+
+            if edge_label:
+                middle_node_trace["text"] += (edge[2][edge_label],)
+                middle_node_trace["mode"] = "markers+text"
 
         if edge_text:
-            for prop in edge_text:
-                if edge[2][prop] not in edge_properties[edge_pair]:
-                    edge_properties[edge_pair][prop] = []
-            edge_properties[edge_pair][prop] += [edge[2][prop]]
+            edge_text_list = [
+                "\n".join(f"{k}: {v}" for k, v in vals.items())
+                for _, vals in edge_properties.items()
+            ]
 
-        if edge_label:
-            middle_node_trace["text"] += (edge[2][edge_label],)
-            middle_node_trace["mode"] = "markers+text"
+            middle_node_trace["hovertext"] = edge_text_list
 
-    if edge_text:
-        edge_text_list = [
-            "\n".join(f"{k}: {v}" for k, v in vals.items())
-            for _, vals in edge_properties.items()
+        return edge_trace, middle_node_trace
+
+    def generate_figure(
+        self,
+        node_trace: go.Scatter,
+        edge_trace: go.Scatter,
+        middle_node_trace: go.Scatter,
+        title: str,
+        titlefont_size: int,
+        showlegend: bool,
+        annotation_text,
+        arrow_size: int,
+        transparent_background: bool,
+        highlight_neighbours_on_hover: bool,
+    ):
+        """
+        Helper function to generate the figure for the Graph.
+        """
+
+        if not annotation_text:
+            annotation_text = ""
+
+        annotations = [
+            dict(
+                text=annotation_text,
+                showarrow=False,
+                xref="paper",
+                yref="paper",
+                x=0.005,
+                y=-0.002,
+            )
         ]
 
-        middle_node_trace["hovertext"] = edge_text_list
-
-    for node in G.nodes():
-        text = f"Node: {node}<br>Degree: {G.degree(node)}"
-        x, y = G.nodes[node]["pos"]
-
-        node_trace["x"] += (x,)
-        node_trace["y"] += (y,)
-
-        if node_label:
-            node_trace["text"] += (G.nodes[node][node_label],)
-        if node_text:
-            for prop in node_text:
-                text += f"<br></br>{prop}: {G.nodes[node][prop]}"
-        node_trace["hovertext"] += (text.strip(),)
-
-        if isinstance(size_method, list):
-            node_trace["marker"]["size"] = size_method
-        elif size_method == "degree":
-            node_trace["marker"]["size"] += (G.degree(node) + 12,)
-        elif size_method == "static":
-            node_trace["marker"]["size"] += (28,)
-        else:
-            node_trace["marker"]["size"] += (G.nodes[node][size_method],)
-
-        if isinstance(color_method, list):
-            node_trace["marker"]["color"] = color_method
-        elif color_method == "degree":
-            node_trace["marker"]["color"] += (G.degree(node),)
-        else:
-            node_trace["marker"]["color"] += (
-                (G.nodes[node][color_method],)
-                if color_method in G.nodes[node]
-                else (color_method,)
+        if isinstance(self.G, (nx.DiGraph, nx.MultiDiGraph)):
+            annotations.extend(
+                dict(
+                    ax=self.G.nodes[edge[0]]["pos"][0],
+                    ay=self.G.nodes[edge[0]]["pos"][1],
+                    axref="x",
+                    ayref="y",
+                    x=self.G.nodes[edge[1]]["pos"][0] * 0.85
+                    + self.G.nodes[edge[0]]["pos"][0] * 0.15,
+                    y=self.G.nodes[edge[1]]["pos"][1] * 0.85
+                    + self.G.nodes[edge[0]]["pos"][1] * 0.15,
+                    xref="x",
+                    yref="y",
+                    showarrow=True,
+                    arrowhead=1,
+                    arrowsize=arrow_size,
+                )
+                for edge in self.G.edges()
             )
 
-    return node_trace, edge_trace, middle_node_trace
-
-
-def _generate_figure(
-    G,
-    node_trace,
-    edge_trace,
-    middle_node_trace,
-    title,
-    titlefont_size,
-    showlegend,
-    annotation_text,
-    arrow_size,
-):
-    """
-    Helper function to generate the figure for the Graph.
-    """
-    annotations = [
-        dict(
-            text=annotation_text,
-            showarrow=False,
-            xref="paper",
-            yref="paper",
-            x=0.005,
-            y=-0.002,
+        self.f = go.FigureWidget(
+            data=[edge_trace, node_trace, middle_node_trace],
+            layout=go.Layout(
+                title=title,
+                titlefont_size=titlefont_size,
+                showlegend=showlegend,
+                hovermode="closest",
+                margin=dict(b=20, l=5, r=5, t=40),
+                annotations=annotations,
+                xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+                yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
+            ),
         )
-    ]
 
-    if isinstance(G, (nx.DiGraph, nx.MultiDiGraph)):
-        annotations.extend(
-            dict(
-                ax=G.nodes[edge[0]]["pos"][0],
-                ay=G.nodes[edge[0]]["pos"][1],
-                axref="x",
-                ayref="y",
-                x=G.nodes[edge[1]]["pos"][0] * 0.85 + G.nodes[edge[0]]["pos"][0] * 0.15,
-                y=G.nodes[edge[1]]["pos"][1] * 0.85 + G.nodes[edge[0]]["pos"][1] * 0.15,
-                xref="x",
-                yref="y",
-                showarrow=True,
-                arrowhead=1,
-                arrowsize=arrow_size,
+        if transparent_background:
+            self.f.update_layout(
+                plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)"
             )
-            for edge in G.edges()
-        )
 
-    return go.Figure(
-        data=[edge_trace, node_trace, middle_node_trace],
-        layout=go.Layout(
-            title=title,
-            titlefont_size=titlefont_size,
-            showlegend=showlegend,
-            hovermode="closest",
-            margin=dict(b=20, l=5, r=5, t=40),
-            annotations=annotations,
-            xaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
-            yaxis=dict(showgrid=False, zeroline=False, showticklabels=False),
-        ),
-    )
+        if highlight_neighbours_on_hover:
+            self.original_node_trace = node_trace
 
+            self.f.data[1].on_hover(self.on_hover)
+            self.f.data[1].on_unhover(self.on_unhover)
 
-def _apply_layout(G, layout):
-    """
-    Applies a layout to a Graph.
-    """
+        return self.f
 
-    layout_functions = {
-        "random": nx.random_layout,
-        "circular": nx.circular_layout,
-        "kamada": nx.kamada_kawai_layout,
-        "planar": nx.planar_layout,
-        "spring": nx.spring_layout,
-        "spectral": nx.spectral_layout,
-        "spiral": nx.spiral_layout,
-    }
+    def _apply_layout(self, G, layout):
+        """
+        Applies a layout to a Graph.
+        """
 
-    pos_dict = layout_functions[layout](G)
+        layout_functions = {
+            "random": nx.random_layout,
+            "circular": nx.circular_layout,
+            "kamada": nx.kamada_kawai_layout,
+            "planar": nx.planar_layout,
+            "spring": nx.spring_layout,
+            "spectral": nx.spectral_layout,
+            "spiral": nx.spiral_layout,
+        }
 
-    nx.set_node_attributes(G, pos_dict, "pos")
+        pos_dict = layout_functions[layout](G)
+
+        nx.set_node_attributes(G, pos_dict, "pos")
+
+        return pos_dict
+
+    def on_hover(
+        self,
+        trace: go.Scatter,
+        points: callbacks.Points,
+        input_device_state: callbacks.InputDeviceState,
+    ):
+        """
+        Callback function for when a node is hovered over.
+
+        Parameters
+        ----------
+        trace : go.Scatter
+            Figure trace for the node.
+        points : callbacks.Points
+            Points that are hovered over.
+        input_device_state : callbacks.InputDeviceState
+            Input device state, e.g. what keys were pressed
+        """
+
+        if not points.point_inds:
+            return
+
+        node = self.inverse_pos_dict[(points.xs[0], points.ys[0])]
+
+        neighbours = list(self.G.neighbors(node))
+
+        c = list(trace.marker.color)
+        # s = list(trace.marker.size)
+
+        new_colors = ["#E4E4E4"] * len(c)
+
+        new_colors[points.point_inds[0]] = c[points.point_inds[0]]
+
+        for i in neighbours:
+            trace_position = list(self.pos_dict).index(i)
+
+            new_colors[trace_position] = c[trace_position]
+            # c[i] = "#EBEBEB"
+            # s[i] = 20
+        with self.f.batch_update():
+            trace.marker.color = new_colors
+            # trace.marker.size = s
+
+    def on_unhover(
+        self,
+        trace: go.Scatter,
+        points: callbacks.Points,
+        input_device_state: callbacks.InputDeviceState,
+    ):
+        """
+        Callback function for when a node is unhovered over.
+
+        Parameters
+        ----------
+        trace : go.Scatter
+            Figure trace for the node.
+        points : callbacks.Points
+            Points that are hovered over.
+        input_device_state : callbacks.InputDeviceState
+            Input device state, e.g. what keys were pressed
+        """
+
+        with self.f.batch_update():
+            trace.marker.color = self.original_node_trace.marker.color
+            trace.marker.size = self.original_node_trace.marker.size

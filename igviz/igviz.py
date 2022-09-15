@@ -471,7 +471,6 @@ class PlotGraph:
         neighbours = list(self.G.neighbors(node))
 
         c = list(trace.marker.color)
-        # s = list(trace.marker.size)
 
         new_colors = ["#E4E4E4"] * len(c)
 
@@ -479,13 +478,10 @@ class PlotGraph:
 
         for i in neighbours:
             trace_position = list(self.pos_dict).index(i)
-
             new_colors[trace_position] = c[trace_position]
-            # c[i] = "#EBEBEB"
-            # s[i] = 20
+
         with self.f.batch_update():
             trace.marker.color = new_colors
-            # trace.marker.size = s
 
     def on_unhover(
         self,

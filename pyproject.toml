@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "igviz"
-version = "0.4.0"
+version = "0.5.0"
 description = "Create interactive network graph visualizations."
 authors = ["Ashton Sidhu"]
 license = "MIT"

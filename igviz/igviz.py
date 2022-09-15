@@ -1,4 +1,5 @@
 from typing import List, Tuple, Union
+from warnings import warn
 
 import networkx as nx
 import plotly.graph_objects as go
@@ -22,7 +23,7 @@ def plot(
     annotation_text: str = None,
     colorscale: str = "YlGnBu",
     colorbar_title: str = None,
-    node_opacity: float = 1.0,
+    node_opacity: float = 0.8,
     arrow_size: int = 2,
     transparent_background: bool = True,
     highlight_neighbours_on_hover: bool = True,
@@ -134,6 +135,8 @@ def plot(
     Plotly Figure
         Plotly figure of the graph
     """
+
+    warn("Argument `titlefont_size` is deprecated and will be removed in 0.6.0.")
 
     plot = PlotGraph(G, layout)
 
@@ -294,7 +297,7 @@ class PlotGraph:
         edge_trace = go.Scatter(
             x=[],
             y=[],
-            line=dict(width=2, color="#888"),
+            line=dict(width=1, color="#888"),
             text=[],
             hoverinfo="text",
             mode=edge_mode,
@@ -470,15 +473,15 @@ class PlotGraph:
 
         neighbours = list(self.G.neighbors(node))
 
-        c = list(trace.marker.color)
+        node_colours = list(trace.marker.color)
 
-        new_colors = ["#E4E4E4"] * len(c)
+        new_colors = ["#E4E4E4"] * len(node_colours)
 
-        new_colors[points.point_inds[0]] = c[points.point_inds[0]]
+        new_colors[points.point_inds[0]] = node_colours[points.point_inds[0]]
 
-        for i in neighbours:
-            trace_position = list(self.pos_dict).index(i)
-            new_colors[trace_position] = c[trace_position]
+        for neighbour in neighbours:
+            trace_position = list(self.pos_dict).index(neighbour)
+            new_colors[trace_position] = node_colours[trace_position]
 
         with self.f.batch_update():
             trace.marker.color = new_colors

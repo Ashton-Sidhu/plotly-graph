@@ -18,7 +18,7 @@
 
 Interactive Graph Visualization (igviz) is a library to help visualize graphs interactively using Plotly. This library provides a customizable api for visualizing graphs in a neat, visually appealing plot. It keeps larger graphs much more clean by displaying minimal text information and highlights node properties and relationships using colour and size while providing the same text information when needed.
 
-![Default Visualization](docs/images/default.png)
+![Default Visualization](docs/images/graph.gif)
 
 ## Usage
 

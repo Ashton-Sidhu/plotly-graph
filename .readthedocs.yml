@@ -17,3 +17,7 @@ python:
     - method: pip
       path: .
   system_packages: true
+
+dependencies:
+  - pip:
+    - jinja2==3.0.0

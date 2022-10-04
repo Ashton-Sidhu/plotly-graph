@@ -16,8 +16,6 @@ python:
   install:
     - method: pip
       path: .
+      extra_requirements:
+        - jinja==3.0.0 
   system_packages: true
-
-dependencies:
-  - pip:
-    - jinja2==3.0.0

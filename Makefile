@@ -1,9 +1,13 @@
 .PHONY: tests
 
+version := $$(awk '/version/ {print $$3}' pyproject.toml | tr -d \")
+
 tests:
 	poetry run pytest
 
 tags:
-	git commit --allow-empty -m "Release $(rel)"
-	git push upstream --tags
-	git tag -a $(rel) -m "Version $(rel)"
+	git tag -a ${version} -m 'Update version'
+	git push origin ${version}
+
+release:
+	gh release create ${version} --generate-notes

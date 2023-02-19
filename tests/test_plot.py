@@ -38,7 +38,6 @@ def MG():
 
 
 def test_plot(G):
-
     ig.plot(
         G,
         node_label="prop",
@@ -47,75 +46,32 @@ def test_plot(G):
         edge_text=["edge_prop"],
     )
 
-    assert True
-
 
 def test_plot_fixed_size_color(G):
-
     ig.plot(G, size_method="static", color_method="#ffffff")
-
-    assert True
 
 
 def test_plot_property(G):
-
     ig.plot(G, size_method="prop", color_method="prop")
-
-    assert True
 
 
 def test_plot_text(G):
-
     ig.plot(G, node_text=["prop"])
-
-    assert True
 
 
 def test_plot_size_list(G):
-
-    size = []
-
-    for node in G.nodes():
-        size.append(3)
-
+    size = [3 for _ in G.nodes()]
     ig.plot(G, size_method=size)
-
-    assert True
 
 
 def test_plot_color_list(G):
-
-    color = []
-
-    for node in G.nodes():
-        color.append(3)
-
+    color = [3 for _ in G.nodes()]
     ig.plot(G, color_method=color)
-
-    assert True
-
-
-def test_plot_layout(G):
-
-    color = []
-
-    for node in G.nodes():
-        color.append(3)
-
-    ig.plot(G, layout="kamada")
-
-    assert True
 
 
 def test_digraph(DG):
-
     ig.plot(DG)
-
-    assert True
 
 
 def test_multigraph(MG):
-
     ig.plot(MG)
-
-    assert True

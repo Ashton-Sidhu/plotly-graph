@@ -203,7 +203,6 @@ class PlotGraph:
         node_opacity: float,
         size_method: Union[str, List[str]],
     ):
-
         node_mode = "markers+text" if node_label else "markers"
         node_trace = go.Scatter(
             x=[],
@@ -336,7 +335,7 @@ class PlotGraph:
                 for prop in edge_text:
                     if edge[2][prop] not in edge_properties[edge_pair]:
                         edge_properties[edge_pair][prop] = []
-                edge_properties[edge_pair][prop] += [edge[2][prop]]
+                    edge_properties[edge_pair][prop].append(edge[2][prop])
 
             if edge_label:
                 middle_node_trace["text"] += (edge[2][edge_label],)

@@ -258,9 +258,7 @@ class PlotGraph:
                 node_trace["marker"]["color"] += (self.G.degree(node),)
             else:
                 node_trace["marker"]["color"] += (
-                    (self.G.nodes[node][color_method],)
-                    if color_method in self.G.nodes[node]
-                    else (color_method,)
+                    (self.G.nodes[node][color_method],) if color_method in self.G.nodes[node] else (color_method,)
                 )
 
         return node_trace
@@ -342,10 +340,7 @@ class PlotGraph:
                 middle_node_trace["mode"] = "markers+text"
 
         if edge_text:
-            edge_text_list = [
-                "\n".join(f"{k}: {v}" for k, v in vals.items())
-                for _, vals in edge_properties.items()
-            ]
+            edge_text_list = ["\n".join(f"{k}: {v}" for k, v in vals.items()) for _, vals in edge_properties.items()]
 
             middle_node_trace["hovertext"] = edge_text_list
 
@@ -389,10 +384,8 @@ class PlotGraph:
                     ay=self.G.nodes[edge[0]]["pos"][1],
                     axref="x",
                     ayref="y",
-                    x=self.G.nodes[edge[1]]["pos"][0] * 0.85
-                    + self.G.nodes[edge[0]]["pos"][0] * 0.15,
-                    y=self.G.nodes[edge[1]]["pos"][1] * 0.85
-                    + self.G.nodes[edge[0]]["pos"][1] * 0.15,
+                    x=self.G.nodes[edge[1]]["pos"][0] * 0.85 + self.G.nodes[edge[0]]["pos"][0] * 0.15,
+                    y=self.G.nodes[edge[1]]["pos"][1] * 0.85 + self.G.nodes[edge[0]]["pos"][1] * 0.15,
                     xref="x",
                     yref="y",
                     showarrow=True,
@@ -417,9 +410,7 @@ class PlotGraph:
         )
 
         if transparent_background:
-            self.f.update_layout(
-                plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)"
-            )
+            self.f.update_layout(plot_bgcolor="rgba(0,0,0,0)", paper_bgcolor="rgba(0,0,0,0)")
 
         if highlight_neighbours_on_hover:
             self.original_node_trace = node_trace
